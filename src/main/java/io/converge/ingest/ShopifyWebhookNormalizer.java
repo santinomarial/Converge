@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +22,7 @@ import io.converge.ledger.InventoryEventType;
 import io.converge.ledger.LedgerService;
 
 @Component
-public class ShopifyWebhookNormalizer {
+public class ShopifyWebhookNormalizer implements WebhookNormalizer {
 
     private final JdbcClient jdbc;
     private final ObjectMapper objectMapper;
@@ -38,15 +37,21 @@ public class ShopifyWebhookNormalizer {
         this.ledger = ledger;
     }
 
-    @KafkaListener(topics = "inventory.raw")
+    @Override
+    public String sourceSystem() {
+        return "shopify";
+    }
+
+    @Override
     @Transactional
-    public void normalize(String rawWebhookId) {
+    public void normalize(UUID rawWebhookId) {
         RawWebhook raw = jdbc.sql("""
                         SELECT id, external_event_id, topic, payload
-                        FROM raw_webhook WHERE id = :id AND state IN ('CAPTURED', 'PUBLISHED')
+                        FROM raw_webhook WHERE id = :id AND source_system = 'shopify'
+                          AND state IN ('CAPTURED', 'PUBLISHED')
                         FOR UPDATE
                         """)
-                .param("id", UUID.fromString(rawWebhookId))
+                .param("id", rawWebhookId)
                 .query(this::mapRaw)
                 .optional()
                 .orElse(null);
@@ -104,4 +109,3 @@ public class ShopifyWebhookNormalizer {
     private record RawWebhook(UUID id, String externalEventId, String topic, byte[] payload) {
     }
 }
-

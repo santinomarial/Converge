@@ -23,6 +23,11 @@ connectors:
     base-url: ${SHOPIFY_BASE_URL:http://localhost:9999}
     access-token: ${SHOPIFY_ACCESS_TOKEN:development-token}
     webhook-secret: ${SHOPIFY_WEBHOOK_SECRET:development-secret}
+  square:
+    base-url: ${SQUARE_BASE_URL:http://localhost:9998}
+    access-token: ${SQUARE_ACCESS_TOKEN:development-token}
+    webhook-signature-key: ${SQUARE_WEBHOOK_SIGNATURE_KEY:development-square-secret}
+    notification-url: ${SQUARE_NOTIFICATION_URL:http://localhost:8080/webhooks/square}
 
 management:
   endpoints:

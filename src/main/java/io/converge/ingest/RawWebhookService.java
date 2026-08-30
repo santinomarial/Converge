@@ -26,7 +26,12 @@ public class RawWebhookService {
 
     @Transactional
     public CaptureResult captureShopify(String externalEventId, String topic, byte[] rawBody) {
-        String cacheKey = "webhook:shopify:" + externalEventId;
+        return capture("shopify", externalEventId, topic, rawBody);
+    }
+
+    @Transactional
+    public CaptureResult capture(String sourceSystem, String externalEventId, String topic, byte[] rawBody) {
+        String cacheKey = "webhook:" + sourceSystem + ":" + externalEventId;
         try {
             redis.opsForValue().setIfAbsent(cacheKey, "seen", Duration.ofHours(24));
         } catch (DataAccessException ignored) {
@@ -36,11 +41,12 @@ public class RawWebhookService {
         UUID id = UUID.randomUUID();
         Optional<UUID> inserted = jdbc.sql("""
                         INSERT INTO raw_webhook (id, source_system, external_event_id, topic, payload)
-                        VALUES (:id, 'shopify', :externalId, :topic, :payload)
+                        VALUES (:id, :sourceSystem, :externalId, :topic, :payload)
                         ON CONFLICT (source_system, external_event_id) DO NOTHING
                         RETURNING id
                         """)
                 .param("id", id)
+                .param("sourceSystem", sourceSystem)
                 .param("externalId", externalEventId)
                 .param("topic", topic)
                 .param("payload", rawBody)
@@ -52,8 +58,9 @@ public class RawWebhookService {
         }
         UUID existing = jdbc.sql("""
                         SELECT id FROM raw_webhook
-                        WHERE source_system = 'shopify' AND external_event_id = :externalId
+                        WHERE source_system = :sourceSystem AND external_event_id = :externalId
                         """)
+                .param("sourceSystem", sourceSystem)
                 .param("externalId", externalEventId)
                 .query(UUID.class)
                 .single();
@@ -63,4 +70,3 @@ public class RawWebhookService {
     public record CaptureResult(UUID id, boolean inserted) {
     }
 }
-
