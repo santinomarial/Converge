@@ -26,7 +26,18 @@ class LedgerServiceIntegrationTest extends IntegrationTestSupport {
 
     @BeforeEach
     void clearLedger() {
-        jdbc.sql("TRUNCATE inventory_position, inventory_event RESTART IDENTITY").update();
+        jdbc.sql("""
+                TRUNCATE inventory_position, inventory_event, sku_mapping, location_mapping,
+                         canonical_sku, location RESTART IDENTITY CASCADE
+                """).update();
+        jdbc.sql("""
+                INSERT INTO canonical_sku (id, sku, style, color, size)
+                VALUES (1, 'SYNTH-1', 'SYNTH', 'BLACK', 'ONE')
+                """).update();
+        jdbc.sql("""
+                INSERT INTO location (id, code, name, location_type)
+                VALUES (10, 'SYNTH-LOC', 'Synthetic location', 'WAREHOUSE')
+                """).update();
     }
 
     @Test
@@ -70,4 +81,3 @@ class LedgerServiceIntegrationTest extends IntegrationTestSupport {
                 kind, delta, absolute, Instant.parse(time), null, Map.of("test", true)));
     }
 }
-
