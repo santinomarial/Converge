@@ -176,7 +176,7 @@ public class LedgerService {
                                    ), 0) AS qty,
                                COALESCE((SELECT seq FROM anchor), 0) AS anchor_seq,
                                MAX(e.seq) AS last_applied_seq,
-                               now() AS updated_at
+                               MAX(e.received_at) AS updated_at
                         FROM inventory_event e
                         WHERE e.canonical_sku_id = :sku AND e.location_id = :location
                         """)

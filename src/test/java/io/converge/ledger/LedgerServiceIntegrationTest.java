@@ -56,9 +56,7 @@ class LedgerServiceIntegrationTest extends IntegrationTestSupport {
         InventoryPosition before = ledger.getPosition(1, 10).orElseThrow();
         assertThat(ledger.replay()).isEqualTo(1);
         InventoryPosition after = ledger.getPosition(1, 10).orElseThrow();
-        assertThat(after.qty()).isEqualTo(before.qty());
-        assertThat(after.anchorSeq()).isEqualTo(before.anchorSeq());
-        assertThat(after.lastAppliedSeq()).isEqualTo(before.lastAppliedSeq());
+        assertThat(after).isEqualTo(before);
     }
 
     @Test

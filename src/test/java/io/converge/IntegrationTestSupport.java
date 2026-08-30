@@ -5,15 +5,20 @@ import java.time.Duration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.redpanda.RedpandaContainer;
 
 public abstract class IntegrationTestSupport {
 
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16.10-alpine");
-    static final RedpandaContainer REDPANDA = new RedpandaContainer(
-            "docker.redpanda.com/redpandadata/redpanda:v24.3.18");
-    static final GenericContainer<?> REDIS = new GenericContainer<>("redis:7.4.5-alpine")
+    protected static final Network NETWORK = Network.newNetwork();
+    protected static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16.10-alpine")
+            .withNetwork(NETWORK).withNetworkAliases("postgres");
+    protected static final RedpandaContainer REDPANDA = new RedpandaContainer(
+            "docker.redpanda.com/redpandadata/redpanda:v24.3.18")
+            .withNetwork(NETWORK).withNetworkAliases("redpanda");
+    protected static final GenericContainer<?> REDIS = new GenericContainer<>("redis:7.4.5-alpine")
+            .withNetwork(NETWORK).withNetworkAliases("redis")
             .withExposedPorts(6379)
             .withStartupTimeout(Duration.ofMinutes(2));
 

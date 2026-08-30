@@ -35,9 +35,11 @@ dependencies {
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
     testImplementation("org.awaitility:awaitility")
+    testImplementation("net.jqwik:jqwik:1.9.3")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:redpanda")
+    testImplementation("org.testcontainers:toxiproxy")
     testImplementation("org.wiremock:wiremock-standalone:3.13.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
