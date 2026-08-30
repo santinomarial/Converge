@@ -3,10 +3,30 @@
   "editable": true,
   "panels": [
     {
-      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2}}},
+      "description": "Signed difference between each external system and the canonical ledger.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"fixedColor": "orange", "mode": "fixed"},
+          "custom": {
+            "axisLabel": "Drift (units)",
+            "axisPlacement": "left",
+            "drawStyle": "line",
+            "fillOpacity": 14,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 3,
+            "pointSize": 5,
+            "showPoints": "always"
+          },
+          "max": 20,
+          "min": -1
+        }
+      },
       "gridPos": {"h": 12, "w": 24, "x": 0, "y": 0},
       "id": 1,
-      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "options": {
+        "legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
       "targets": [
         {"expr": "inventory_drift", "legendFormat": "{{system}}", "refId": "A"}
       ],
@@ -22,4 +42,3 @@
   "uid": "converge-drift",
   "version": 1
 }
-

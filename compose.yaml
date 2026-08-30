@@ -1,6 +1,25 @@
 name: converge
 
 services:
+  app:
+    build: .
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/converge
+      DATABASE_USERNAME: converge
+      DATABASE_PASSWORD: converge
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+      REDIS_HOST: redis
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   postgres:
     image: postgres:16.10-alpine
     environment:
@@ -8,7 +27,7 @@ services:
       POSTGRES_USER: converge
       POSTGRES_PASSWORD: converge
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U converge -d converge"]
       interval: 5s
@@ -29,10 +48,10 @@ services:
       - --node-id=0
       - --check=false
       - --kafka-addr=internal://0.0.0.0:29092,external://0.0.0.0:9092
-      - --advertise-kafka-addr=internal://redpanda:29092,external://localhost:9092
+      - --advertise-kafka-addr=internal://redpanda:29092,external://localhost:${REDPANDA_PORT:-9092}
     ports:
-      - "9092:9092"
-      - "9644:9644"
+      - "${REDPANDA_PORT:-9092}:9092"
+      - "${REDPANDA_ADMIN_PORT:-9644}:9644"
     healthcheck:
       test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
       interval: 5s
@@ -43,7 +62,7 @@ services:
     image: redis:7.4.5-alpine
     command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -56,11 +75,19 @@ services:
     image: prom/prometheus:v3.5.0
     command: ["--config.file=/etc/prometheus/prometheus.yml"]
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT:-9090}:9090"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.133.0
+    command: ["--config=/etc/otelcol/config.yml"]
+    ports:
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+    volumes:
+      - ./monitoring/otel-collector.yml:/etc/otelcol/config.yml:ro
 
   grafana:
     image: grafana/grafana:12.1.0
@@ -68,7 +95,7 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3000}:3000"
     depends_on:
       - prometheus
     volumes:

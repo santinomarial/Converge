@@ -23,4 +23,14 @@ jobs:
         uses: gradle/actions/wrapper-validation@v4
       - name: Run tests
         run: ./gradlew test
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build operations console
+        working-directory: frontend
+        run: npm ci && npm run build
+      - name: Build production image
+        run: docker build -t converge:${{ github.sha }} .
 
