@@ -29,6 +29,10 @@ connectors:
     webhook-signature-key: ${SQUARE_WEBHOOK_SIGNATURE_KEY:development-square-secret}
     notification-url: ${SQUARE_NOTIFICATION_URL:http://localhost:8080/webhooks/square}
 
+reconciliation:
+  poll-delay: ${RECONCILIATION_POLL_DELAY:60s}
+  initial-delay: ${RECONCILIATION_INITIAL_DELAY:60s}
+
 management:
   endpoints:
     web:

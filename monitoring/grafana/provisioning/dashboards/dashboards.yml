@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: Converge
+    folder: Inventory
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards
+

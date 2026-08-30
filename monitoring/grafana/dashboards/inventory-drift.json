@@ -1,0 +1,25 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "panels": [
+    {
+      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "lineWidth": 2}}},
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}},
+      "targets": [
+        {"expr": "inventory_drift", "legendFormat": "{{system}}", "refId": "A"}
+      ],
+      "title": "Inventory drift by system",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 41,
+  "tags": ["inventory", "reconciliation"],
+  "templating": {"list": []},
+  "time": {"from": "now-24h", "to": "now"},
+  "title": "Converge inventory drift",
+  "uid": "converge-drift",
+  "version": 1
+}
+
