@@ -16,6 +16,13 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       auto-offset-reset: earliest
+      group-id: converge-normalizer
+
+connectors:
+  shopify:
+    base-url: ${SHOPIFY_BASE_URL:http://localhost:9999}
+    access-token: ${SHOPIFY_ACCESS_TOKEN:development-token}
+    webhook-secret: ${SHOPIFY_WEBHOOK_SECRET:development-secret}
 
 management:
   endpoints:
@@ -26,4 +33,3 @@ management:
     health:
       probes:
         enabled: true
-

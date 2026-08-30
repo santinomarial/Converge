@@ -34,7 +34,7 @@ class InfrastructureIntegrationTest extends IntegrationTestSupport {
 
         try (var admin = AdminClient.create(Map.of(
                 AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, REDPANDA.getBootstrapServers()))) {
-            assertThat(admin.listTopics().names().get(10, TimeUnit.SECONDS)).isEmpty();
+            assertThat(admin.listTopics().names().get(10, TimeUnit.SECONDS)).contains("inventory.raw");
         }
     }
 }
