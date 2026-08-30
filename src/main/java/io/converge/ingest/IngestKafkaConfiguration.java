@@ -12,5 +12,9 @@ class IngestKafkaConfiguration {
     NewTopic inventoryRawTopic() {
         return TopicBuilder.name("inventory.raw").partitions(3).replicas(1).build();
     }
-}
 
+    @Bean
+    NewTopic inventoryPositionChangedTopic() {
+        return TopicBuilder.name("inventory.position.changed").partitions(3).replicas(1).build();
+    }
+}

@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
@@ -73,6 +74,7 @@ public class LedgerService {
         }
 
         InventoryPosition position = projectAggregate(event.canonicalSkuId(), event.locationId());
+        writeOutbox(event, position);
         return new AppendResult(insertedSeq.get(), true, position);
     }
 
@@ -241,6 +243,27 @@ public class LedgerService {
             return objectMapper.writeValueAsString(event.payload());
         } catch (JsonProcessingException exception) {
             throw new IllegalArgumentException("Event payload cannot be serialized", exception);
+        }
+    }
+
+    private void writeOutbox(AppendInventoryEvent event, InventoryPosition position) {
+        boolean compensation = Boolean.TRUE.equals(event.payload().get("compensation"));
+        try {
+            String payload = objectMapper.writeValueAsString(java.util.Map.of(
+                    "eventId", event.eventId().toString(),
+                    "canonicalSkuId", event.canonicalSkuId(),
+                    "locationId", event.locationId(),
+                    "sourceSystem", event.sourceSystem(),
+                    "targetQty", position.qty(),
+                    "compensation", compensation));
+            jdbc.sql("""
+                    INSERT INTO outbox (id, aggregate_id, topic, payload)
+                    VALUES (:id, :aggregateId, 'inventory.position.changed', CAST(:payload AS jsonb))
+                    """).param("id", UUID.randomUUID())
+                    .param("aggregateId", event.canonicalSkuId() + ":" + event.locationId())
+                    .param("payload", payload).update();
+        } catch (JsonProcessingException exception) {
+            throw new IllegalArgumentException("Outbox payload cannot be serialized", exception);
         }
     }
 

@@ -33,6 +33,16 @@ reconciliation:
   poll-delay: ${RECONCILIATION_POLL_DELAY:60s}
   initial-delay: ${RECONCILIATION_INITIAL_DELAY:60s}
 
+sync:
+  relay-delay: ${OUTBOX_RELAY_DELAY:1s}
+  relay-initial-delay: ${OUTBOX_RELAY_INITIAL_DELAY:60s}
+  worker-delay: ${SYNC_WORKER_DELAY:500ms}
+  worker-initial-delay: ${SYNC_WORKER_INITIAL_DELAY:60s}
+  max-attempts: ${SYNC_MAX_ATTEMPTS:5}
+  rate-limit:
+    capacity: ${SYNC_RATE_CAPACITY:20}
+    refill-per-second: ${SYNC_RATE_REFILL_PER_SECOND:10}
+
 management:
   endpoints:
     web:
