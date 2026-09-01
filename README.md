@@ -125,6 +125,7 @@ There are no mocked repositories. Integration tests run against PostgreSQL, Redp
 |---|---|
 | Event reordering | jqwik permutations of deltas and snapshot/delta interleavings |
 | Projection loss | Truncate and replay reproduces the exact projection |
+| Incremental projector defect | Every adversarial append is compared with an independent full-history reducer; deliberate corruption is detected and repaired by replay |
 | Duplicate storms | 50 concurrent copies produce one ledger row |
 | Database loss mid-write | Toxiproxy cuts PostgreSQL; retry succeeds without a duplicate |
 | Outbox atomicity | Event and outbox commit together against PostgreSQL |
@@ -137,7 +138,7 @@ The current automated chaos suite does not yet hold Kafka behind a live Toxiprox
 
 ## Observability
 
-Micrometer exposes `inventory_drift{system=...}` at `/actuator/prometheus`. Prometheus scrapes every five seconds, Grafana provisions the checked-in [dashboard JSON](monitoring/grafana/dashboards/inventory-drift.json), and Micrometer tracing exports OTLP spans through the OpenTelemetry Collector. Local sampling defaults to 100%; `fly.toml` reduces it to 10%.
+Micrometer exposes `inventory_drift{system=...}`, `inventory_projection_shadow_verified_total`, and `inventory_projection_shadow_mismatches_total` at `/actuator/prometheus`. Prometheus scrapes every five seconds, Grafana provisions the checked-in [dashboard JSON](monitoring/grafana/dashboards/inventory-drift.json), and Micrometer tracing exports OTLP spans through the OpenTelemetry Collector. Local sampling defaults to 100%; `fly.toml` reduces it to 10%.
 
 The screenshot above is from the provisioned Grafana 12 dashboard against a Prometheus series that rose to 18 units and recovered to zero. Severity is separate from the product's crimson brand palette: Grafana and the operations console use amber/orange for drift.
 
@@ -158,17 +159,19 @@ The checked-in [k6 scenario](load/webhook.js) creates canonical mappings, signs 
 ```bash
 docker run --rm -v "$PWD/load:/scripts:ro" grafana/k6:2.2.0 run \
   -e BASE_URL=http://host.docker.internal:8080 \
-  -e RATE=500 -e DURATION=30s /scripts/webhook.js
+  -e RATE=500 -e DURATION=30s -e VUS=500 -e MAX_VUS=500 \
+  /scripts/webhook.js
 ```
 
-Measured locally on 2026-08-30 on an Apple Silicon development machine, with the JVM on the host and PostgreSQL/Redpanda/Redis in Docker:
+Measured from a clean database and broker on 2026-08-31 on an Apple Silicon development machine, with the JVM on the host and PostgreSQL/Redpanda/Redis in Docker:
 
 | Arrival rate | Completed | Failures | Average ack | p95 | p99 | Max |
 |---:|---:|---:|---:|---:|---:|---:|
-| 100/s for 30s | 3,001 | 0% | 2.51 ms | 4.41 ms | 9.98 ms | 79.86 ms |
-| 500/s for 30s | 15,001 | 0% | 1.31 ms | 2.09 ms | 5.55 ms | 56.59 ms |
+| 500/s for 30s | 15,001 | 0% | 7.87 ms | 37.01 ms | 118.81 ms | 298.95 ms |
 
-These are acknowledgement numbers, not a claim that every downstream projection completed within the same latency: the endpoint deliberately acknowledges after durable raw capture and normalizes asynchronously. The first known degradation point is the projector, which currently recomputes one aggregate from its full event history on every accepted normalized event. Its cost grows with events per SKU/location rather than global webhook rate.
+These are acknowledgement numbers: the endpoint returns only after durable raw capture, then normalizes asynchronously. This deliberately hostile run sent all 15,001 facts to one SKU/location. Projection remained bounded and caught up after the burst; the aggregate lock serialized that one key while unrelated keys remained independently processable.
+
+Normal writes no longer reduce the full history. A delta performs an atomic checkpoint update, and a snapshot replaces the anchor only when its `(occurred_at, seq)` wins. `last_applied_seq` records progress. The independent full reducer is reserved for explicit replay and a rotating shadow-verification batch, so history length no longer increases the cost of every ordinary event.
 
 ## Configuration and deployment
 
@@ -191,4 +194,4 @@ Do not put credentials in `fly.toml` or Git. The application name can be changed
 
 ## What I would do differently next
 
-I would make projection incremental. The current full-aggregate SQL reducer is intentionally easy to reason about and makes replay use exactly the same logic, but a single long-lived SKU becomes progressively more expensive. I would keep the append-only source of truth, add an incremental projector checkpointed by `last_applied_seq`, and continuously compare it with a shadow full replay. Only after proving identical outputs would I partition work by aggregate key. That addresses the measured shape of the bottleneck without weakening the convergence invariant.
+I would introduce the dual projection paths from the first ledger milestone. The first implementation used the full-history reducer for both normal writes and replay because it made the invariant obvious, but the load test showed why that should remain an oracle rather than the hot path. That correction is now implemented: production writes are incremental and checkpointed, while replay and continuous shadow verification independently prove the same result. Starting with both would have avoided a later hot-path rewrite without sacrificing the simple correctness model.

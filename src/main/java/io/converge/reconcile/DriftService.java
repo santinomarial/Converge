@@ -80,7 +80,7 @@ public class DriftService {
         return jdbc.sql("""
                 SELECT canonical_sku_id, location_id, system, drift, sampled_at
                 FROM drift_sample
-                WHERE (:system IS NULL OR system = :system) AND sampled_at >= :since
+                WHERE (CAST(:system AS text) IS NULL OR system = :system) AND sampled_at >= :since
                 ORDER BY sampled_at
                 """).param("system", system).param("since", Timestamp.from(since))
                 .query(this::mapSample).list();
@@ -93,4 +93,3 @@ public class DriftService {
 
     public record DriftObservation(int drift, int consecutiveCycles, boolean exceptionOpened) { }
 }
-

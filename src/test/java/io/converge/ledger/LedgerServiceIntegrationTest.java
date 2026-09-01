@@ -60,6 +60,40 @@ class LedgerServiceIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    void incrementalCheckpointMatchesIndependentFullHistoryReducerAfterEveryAppend() {
+        append("future-delta", EventKind.DELTA, 5, null, "2026-01-05T00:00:00Z");
+        assertShadowMatches();
+        append("initial-count", EventKind.SNAPSHOT, null, 100, "2026-01-02T00:00:00Z");
+        assertShadowMatches();
+        append("absorbed-delta", EventKind.DELTA, -20, null, "2026-01-01T00:00:00Z");
+        assertShadowMatches();
+        append("new-anchor", EventKind.SNAPSHOT, null, 40, "2026-01-04T00:00:00Z");
+        assertShadowMatches();
+        append("historical-snapshot", EventKind.SNAPSHOT, null, 999, "2026-01-03T00:00:00Z");
+        assertShadowMatches();
+        AppendResult last = append("new-sale", EventKind.DELTA, -3, null, "2026-01-06T00:00:00Z");
+        assertShadowMatches();
+
+        assertThat(last.position().qty()).isEqualTo(42);
+        assertThat(last.position().lastAppliedSeq()).isEqualTo(last.seq());
+        assertThat(ledger.findPositions(null, null)).singleElement()
+                .extracting(InventoryPosition::qty).isEqualTo(42);
+    }
+
+    @Test
+    void shadowReducerDetectsCorruptionAndReplayRepairsIt() {
+        append("count", EventKind.SNAPSHOT, null, 25, "2026-01-01T00:00:00Z");
+        append("sale", EventKind.DELTA, -4, null, "2026-01-02T00:00:00Z");
+        jdbc.sql("UPDATE inventory_position SET qty = 9 WHERE canonical_sku_id = 1 AND location_id = 10")
+                .update();
+
+        assertThat(ledger.verifyProjection(1, 10).matches()).isFalse();
+        assertThat(ledger.replay()).isEqualTo(1);
+        assertShadowMatches();
+        assertThat(ledger.getPosition(1, 10).orElseThrow().qty()).isEqualTo(21);
+    }
+
+    @Test
     void duplicateExternalEventIsIdempotentAndLogRejectsMutation() {
         AppendResult first = append("same", EventKind.DELTA, -2, null, "2026-01-01T00:00:00Z");
         AppendResult duplicate = append("same", EventKind.DELTA, -2, null, "2026-01-01T00:00:00Z");
@@ -77,5 +111,9 @@ class LedgerServiceIntegrationTest extends IntegrationTestSupport {
                 UUID.randomUUID(), 1, 10, "synthetic", externalId,
                 kind == EventKind.SNAPSHOT ? InventoryEventType.COUNT : InventoryEventType.ADJUSTMENT,
                 kind, delta, absolute, Instant.parse(time), null, Map.of("test", true)));
+    }
+
+    private void assertShadowMatches() {
+        assertThat(ledger.verifyProjection(1, 10).matches()).isTrue();
     }
 }

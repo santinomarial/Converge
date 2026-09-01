@@ -29,9 +29,8 @@ public class LedgerService {
 
     @Transactional
     public AppendResult append(AppendInventoryEvent event) {
-        lockAggregate(event.canonicalSkuId(), event.locationId());
-        boolean absorbed = event.kind() == EventKind.DELTA && isBehindCurrentAnchor(event);
-        Optional<Long> insertedSeq = jdbc.sql("""
+        boolean absorbed = lockAggregateAndDetermineAbsorption(event);
+        Optional<StoredEvent> inserted = jdbc.sql("""
                         INSERT INTO inventory_event (
                             event_id, canonical_sku_id, location_id, source_system,
                             external_event_id, event_type, kind, qty_delta, qty_absolute,
@@ -42,7 +41,7 @@ public class LedgerService {
                             CAST(:payload AS jsonb)
                         )
                         ON CONFLICT (source_system, external_event_id) DO NOTHING
-                        RETURNING seq
+                        RETURNING seq, received_at
                         """)
                 .param("eventId", event.eventId())
                 .param("sku", event.canonicalSkuId())
@@ -57,10 +56,11 @@ public class LedgerService {
                 .param("absorbed", absorbed)
                 .param("causationId", event.causationId())
                 .param("payload", toJson(event))
-                .query(Long.class)
+                .query((rs, row) -> new StoredEvent(rs.getLong("seq"),
+                        rs.getTimestamp("received_at").toInstant()))
                 .optional();
 
-        if (insertedSeq.isEmpty()) {
+        if (inserted.isEmpty()) {
             long existingSeq = jdbc.sql("""
                             SELECT seq FROM inventory_event
                             WHERE source_system = :source AND external_event_id IS NOT DISTINCT FROM :externalId
@@ -73,9 +73,10 @@ public class LedgerService {
                     getPosition(event.canonicalSkuId(), event.locationId()).orElseThrow());
         }
 
-        InventoryPosition position = projectAggregate(event.canonicalSkuId(), event.locationId());
+        StoredEvent stored = inserted.get();
+        InventoryPosition position = applyIncrementally(event, stored, absorbed);
         writeOutbox(event, position);
-        return new AppendResult(insertedSeq.get(), true, position);
+        return new AppendResult(stored.seq(), true, position);
     }
 
     public Optional<InventoryPosition> getPosition(long sku, long location) {
@@ -94,8 +95,8 @@ public class LedgerService {
         return jdbc.sql("""
                         SELECT canonical_sku_id, location_id, qty, anchor_seq, last_applied_seq, updated_at
                         FROM inventory_position
-                        WHERE (:sku IS NULL OR canonical_sku_id = :sku)
-                          AND (:location IS NULL OR location_id = :location)
+                        WHERE (CAST(:sku AS bigint) IS NULL OR canonical_sku_id = :sku)
+                          AND (CAST(:location AS bigint) IS NULL OR location_id = :location)
                         ORDER BY canonical_sku_id, location_id
                         """)
                 .param("sku", sku)
@@ -129,37 +130,115 @@ public class LedgerService {
                         """)
                 .query((rs, row) -> new AggregateKey(rs.getLong(1), rs.getLong(2)))
                 .list();
-        aggregates.forEach(key -> projectAggregate(key.sku(), key.location()));
+        aggregates.forEach(key -> projectAggregateFromHistory(key.sku(), key.location()));
         return aggregates.size();
     }
 
-    private void lockAggregate(long sku, long location) {
-        jdbc.sql("SELECT pg_advisory_xact_lock(:sku, :location)")
-                .param("sku", Math.toIntExact(sku))
-                .param("location", Math.toIntExact(location))
-                .query(resultSet -> {
-                    resultSet.next();
-                    return true;
-                });
+    /**
+     * Independently reduces the complete event history and compares it with the incremental
+     * checkpoint. The scheduled shadow verifier uses this path to detect projector defects.
+     */
+    @Transactional(readOnly = true, isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    public ProjectionVerification verifyProjection(long sku, long location) {
+        InventoryPosition actual = getPosition(sku, location).orElse(null);
+        InventoryPosition expected = calculateFromHistory(sku, location);
+        return new ProjectionVerification(actual, expected, expected.equals(actual));
     }
 
-    private boolean isBehindCurrentAnchor(AppendInventoryEvent event) {
+    List<AggregateKey> aggregateKeysAfter(long sku, long location, int limit) {
         return jdbc.sql("""
-                        SELECT EXISTS (
+                SELECT canonical_sku_id, location_id
+                FROM inventory_position
+                WHERE (canonical_sku_id, location_id) > (:sku, :location)
+                ORDER BY canonical_sku_id, location_id
+                LIMIT :limit
+                """).param("sku", sku).param("location", location).param("limit", limit)
+                .query((rs, row) -> new AggregateKey(rs.getLong(1), rs.getLong(2))).list();
+    }
+
+    private boolean lockAggregateAndDetermineAbsorption(AppendInventoryEvent event) {
+        return jdbc.sql("""
+                        WITH aggregate_lock AS MATERIALIZED (
+                            SELECT pg_advisory_xact_lock(hashtextextended(
+                                CAST(:sku AS text) || ':' || CAST(:location AS text), 0))
+                        )
+                        SELECT :isDelta AND EXISTS (
                             SELECT 1 FROM inventory_event
                             WHERE canonical_sku_id = :sku AND location_id = :location
                               AND kind = 'SNAPSHOT' AND occurred_at >= :occurredAt
                         )
+                        FROM aggregate_lock
                         """)
                 .param("sku", event.canonicalSkuId())
                 .param("location", event.locationId())
+                .param("isDelta", event.kind() == EventKind.DELTA)
                 .param("occurredAt", Timestamp.from(event.occurredAt()))
                 .query(Boolean.class)
                 .single();
     }
 
-    private InventoryPosition projectAggregate(long sku, long location) {
-        InventoryPosition calculated = jdbc.sql("""
+    private InventoryPosition applyIncrementally(AppendInventoryEvent event, StoredEvent stored, boolean absorbed) {
+        return event.kind() == EventKind.DELTA
+                ? applyDelta(event, stored, absorbed)
+                : applySnapshot(event, stored);
+    }
+
+    private InventoryPosition applyDelta(AppendInventoryEvent event, StoredEvent stored, boolean absorbed) {
+        return jdbc.sql("""
+                INSERT INTO inventory_position (
+                    canonical_sku_id, location_id, qty, anchor_seq, last_applied_seq, updated_at
+                ) VALUES (:sku, :location, :delta, 0, :seq, :updatedAt)
+                ON CONFLICT (canonical_sku_id, location_id) DO UPDATE SET
+                    qty = inventory_position.qty + EXCLUDED.qty,
+                    last_applied_seq = EXCLUDED.last_applied_seq,
+                    updated_at = EXCLUDED.updated_at
+                RETURNING canonical_sku_id, location_id, qty, anchor_seq, last_applied_seq, updated_at
+                """).param("sku", event.canonicalSkuId()).param("location", event.locationId())
+                .param("delta", absorbed ? 0 : event.qtyDelta()).param("seq", stored.seq())
+                .param("updatedAt", Timestamp.from(stored.receivedAt()))
+                .query(this::mapPosition).single();
+    }
+
+    private InventoryPosition applySnapshot(AppendInventoryEvent event, StoredEvent stored) {
+        return jdbc.sql("""
+                WITH latest_anchor AS (
+                    SELECT seq, occurred_at, qty_absolute
+                    FROM inventory_event
+                    WHERE canonical_sku_id = :sku AND location_id = :location AND kind = 'SNAPSHOT'
+                    ORDER BY occurred_at DESC, seq DESC LIMIT 1
+                ), calculated AS (
+                    SELECT a.seq AS anchor_seq,
+                           a.qty_absolute + COALESCE(SUM(e.qty_delta), 0)::integer AS qty
+                    FROM latest_anchor a
+                    LEFT JOIN inventory_event e
+                      ON e.canonical_sku_id = :sku AND e.location_id = :location
+                     AND e.kind = 'DELTA' AND e.occurred_at > a.occurred_at
+                    GROUP BY a.seq, a.qty_absolute
+                )
+                INSERT INTO inventory_position (
+                    canonical_sku_id, location_id, qty, anchor_seq, last_applied_seq, updated_at
+                ) SELECT :sku, :location, qty, anchor_seq, :seq, :updatedAt FROM calculated
+                ON CONFLICT (canonical_sku_id, location_id) DO UPDATE SET
+                    qty = CASE WHEN EXCLUDED.anchor_seq = :seq
+                               THEN EXCLUDED.qty ELSE inventory_position.qty END,
+                    anchor_seq = CASE WHEN EXCLUDED.anchor_seq = :seq
+                                      THEN EXCLUDED.anchor_seq ELSE inventory_position.anchor_seq END,
+                    last_applied_seq = EXCLUDED.last_applied_seq,
+                    updated_at = EXCLUDED.updated_at
+                RETURNING canonical_sku_id, location_id, qty, anchor_seq, last_applied_seq, updated_at
+                """).param("sku", event.canonicalSkuId()).param("location", event.locationId())
+                .param("seq", stored.seq()).param("updatedAt", Timestamp.from(stored.receivedAt()))
+                .query(this::mapPosition).single();
+    }
+
+    private InventoryPosition projectAggregateFromHistory(long sku, long location) {
+        InventoryPosition calculated = calculateFromHistory(sku, location);
+        upsertPosition(calculated);
+        return calculated;
+    }
+
+    private InventoryPosition calculateFromHistory(long sku, long location) {
+        return jdbc.sql("""
                         WITH anchor AS (
                             SELECT seq, occurred_at, qty_absolute
                             FROM inventory_event
@@ -182,9 +261,10 @@ public class LedgerService {
                         """)
                 .param("sku", sku)
                 .param("location", location)
-                .query(this::mapPosition)
-                .single();
+                .query(this::mapPosition).single();
+    }
 
+    private void upsertPosition(InventoryPosition calculated) {
         jdbc.sql("""
                         INSERT INTO inventory_position (
                             canonical_sku_id, location_id, qty, anchor_seq, last_applied_seq, updated_at
@@ -202,7 +282,6 @@ public class LedgerService {
                 .param("lastSeq", calculated.lastAppliedSeq())
                 .param("updatedAt", Timestamp.from(calculated.updatedAt()))
                 .update();
-        return calculated;
     }
 
     private InventoryPosition mapPosition(ResultSet rs, int rowNum) throws SQLException {
@@ -267,6 +346,11 @@ public class LedgerService {
         }
     }
 
-    private record AggregateKey(long sku, long location) {
+    record AggregateKey(long sku, long location) {
     }
+
+    private record StoredEvent(long seq, Instant receivedAt) { }
+
+    public record ProjectionVerification(
+            InventoryPosition actual, InventoryPosition expected, boolean matches) { }
 }

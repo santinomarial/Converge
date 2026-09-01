@@ -8,6 +8,9 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/converge}
     username: ${DATABASE_USERNAME:converge}
     password: ${DATABASE_PASSWORD:converge}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_MAX_SIZE:30}
+      minimum-idle: ${DATABASE_POOL_MIN_IDLE:5}
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -32,6 +35,11 @@ connectors:
 reconciliation:
   poll-delay: ${RECONCILIATION_POLL_DELAY:60s}
   initial-delay: ${RECONCILIATION_INITIAL_DELAY:60s}
+
+ledger:
+  shadow-verification-delay: ${LEDGER_SHADOW_VERIFICATION_DELAY:60s}
+  shadow-verification-initial-delay: ${LEDGER_SHADOW_VERIFICATION_INITIAL_DELAY:60s}
+  shadow-verification-batch-size: ${LEDGER_SHADOW_VERIFICATION_BATCH_SIZE:100}
 
 sync:
   relay-delay: ${OUTBOX_RELAY_DELAY:1s}

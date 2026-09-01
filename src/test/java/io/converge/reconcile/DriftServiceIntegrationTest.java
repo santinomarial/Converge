@@ -45,6 +45,7 @@ class DriftServiceIntegrationTest extends IntegrationTestSupport {
         assertThat(third.consecutiveCycles()).isEqualTo(3);
         assertThat(jdbc.sql("SELECT count(*) FROM reconciliation_exception").query(Long.class).single()).isOne();
         assertThat(drift.samples("shopify", java.time.Duration.ofHours(1))).hasSize(3);
+        assertThat(drift.samples(null, java.time.Duration.ofHours(1))).hasSize(3);
     }
 
     @Test
@@ -57,4 +58,3 @@ class DriftServiceIntegrationTest extends IntegrationTestSupport {
         assertThat(jdbc.sql("SELECT count(*) FROM reconciliation_exception").query(Long.class).single()).isZero();
     }
 }
-
