@@ -1,7 +1,11 @@
 package io.converge.connectors.square;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,5 +32,19 @@ class SquareAdapterTest {
         SquareAdapter adapter = new SquareAdapter(RestClient.builder(), properties);
         assertThat(adapter.fetchPosition("sku-1", "loc-1").qty()).isEqualTo(13);
     }
-}
 
+    @Test
+    void writesInventoryWithTheStableAttemptIdInTheRequestBody() {
+        square.stubFor(post(urlEqualTo("/v2/inventory/changes/batch-create"))
+                .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
+                        .withStatus(200).withHeader("Content-Length", "0")));
+        SquareProperties properties = new SquareProperties();
+        properties.setBaseUrl(square.baseUrl());
+        SquareAdapter adapter = new SquareAdapter(RestClient.builder(), properties);
+
+        adapter.pushPosition("sku-1", "loc-1", 13, "attempt-123");
+
+        square.verify(1, postRequestedFor(urlPathEqualTo("/v2/inventory/changes/batch-create"))
+                .withRequestBody(matchingJsonPath("$.idempotency_key", equalTo("attempt-123"))));
+    }
+}

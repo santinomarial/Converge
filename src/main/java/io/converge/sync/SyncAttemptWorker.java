@@ -1,5 +1,6 @@
 package io.converge.sync;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -8,12 +9,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import io.converge.connectors.InventorySink;
+import io.converge.connectors.InventorySource;
 import io.converge.ledger.AppendInventoryEvent;
 import io.converge.ledger.EventKind;
 import io.converge.ledger.InventoryEventType;
@@ -28,19 +31,27 @@ public class SyncAttemptWorker {
     private final RedisTokenBucket rateLimiter;
     private final CircuitBreakerRegistry breakers;
     private final Map<String, InventorySink> sinks;
+    private final Map<String, InventorySource> sources;
     private final LedgerService ledger;
+    private final SyncWriteObserver writeObserver;
     private final int maxAttempts;
+    private final Duration runningLease;
 
     public SyncAttemptWorker(JdbcClient jdbc, TransactionTemplate transactions, RedisTokenBucket rateLimiter,
-            CircuitBreakerRegistry breakers, List<InventorySink> sinks, LedgerService ledger,
-            @Value("${sync.max-attempts}") int maxAttempts) {
+            CircuitBreakerRegistry breakers, List<InventorySink> sinks, List<InventorySource> sources,
+            LedgerService ledger, ObjectProvider<SyncWriteObserver> writeObserver,
+            @Value("${sync.max-attempts}") int maxAttempts,
+            @Value("${sync.running-lease}") Duration runningLease) {
         this.jdbc = jdbc;
         this.transactions = transactions;
         this.rateLimiter = rateLimiter;
         this.breakers = breakers;
         this.sinks = sinks.stream().collect(Collectors.toUnmodifiableMap(InventorySink::system, Function.identity()));
+        this.sources = sources.stream().collect(Collectors.toUnmodifiableMap(InventorySource::system, Function.identity()));
         this.ledger = ledger;
+        this.writeObserver = writeObserver.getIfAvailable(() -> attemptId -> { });
         this.maxAttempts = maxAttempts;
+        this.runningLease = runningLease;
     }
 
     @Scheduled(fixedDelayString = "${sync.worker-delay}", initialDelayString = "${sync.worker-initial-delay}")
@@ -57,10 +68,15 @@ public class SyncAttemptWorker {
             return;
         }
         try {
-            breakers.circuitBreaker("sync-" + attempt.system()).executeRunnable(() ->
-                    sink.pushPosition(attempt.externalSku(), attempt.externalLocation(), attempt.targetQty()));
-            jdbc.sql("UPDATE sync_attempt SET state = 'SUCCEEDED', updated_at = now() WHERE id = :id")
-                    .param("id", attempt.id()).update();
+            breakers.circuitBreaker("sync-" + attempt.system()).executeRunnable(() -> {
+                if (attempt.attempt() > 0 && remoteAlreadyMatches(attempt)) {
+                    return;
+                }
+                sink.pushPosition(attempt.externalSku(), attempt.externalLocation(), attempt.targetQty(),
+                        attempt.id().toString());
+                writeObserver.afterExternalWrite(attempt.id());
+            });
+            markSucceeded(attempt.id());
         } catch (CallNotPermittedException open) {
             // An open breaker queues work for half-open recovery; it never drops the write or burns an attempt.
             requeue(attempt.id(), attempt.attempt(), "circuit breaker open", 2);
@@ -70,6 +86,13 @@ public class SyncAttemptWorker {
     }
 
     private Attempt claim() {
+        jdbc.sql("""
+                UPDATE sync_attempt SET state = 'QUEUED', attempt = attempt + 1,
+                    last_error = 'running lease expired after ambiguous external result',
+                    next_attempt_at = now(), updated_at = now()
+                WHERE state = 'RUNNING'
+                  AND updated_at < now() - (:leaseMillis * interval '1 millisecond')
+                """).param("leaseMillis", runningLease.toMillis()).update();
         return jdbc.sql("""
                 UPDATE sync_attempt SET state = 'RUNNING', updated_at = now()
                 WHERE id = (SELECT id FROM sync_attempt WHERE state = 'QUEUED' AND next_attempt_at <= now()
@@ -82,6 +105,17 @@ public class SyncAttemptWorker {
                         rs.getString("external_sku_id"), rs.getString("external_location_id"),
                         rs.getInt("target_qty"), rs.getInt("attempt"), rs.getBoolean("compensation")))
                 .optional().orElse(null);
+    }
+
+    private boolean remoteAlreadyMatches(Attempt attempt) {
+        InventorySource source = sources.get(attempt.system());
+        return source != null
+                && source.fetchPosition(attempt.externalSku(), attempt.externalLocation()).qty() == attempt.targetQty();
+    }
+
+    private void markSucceeded(UUID id) {
+        jdbc.sql("UPDATE sync_attempt SET state = 'SUCCEEDED', updated_at = now() WHERE id = :id")
+                .param("id", id).update();
     }
 
     private void fail(Attempt attempt, RuntimeException failure) {
@@ -132,4 +166,3 @@ public class SyncAttemptWorker {
     private record Attempt(UUID id, UUID outboxId, long sku, long location, String system,
             String externalSku, String externalLocation, int targetQty, int attempt, boolean compensation) { }
 }
-

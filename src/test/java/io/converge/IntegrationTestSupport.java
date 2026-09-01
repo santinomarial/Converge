@@ -1,6 +1,7 @@
 package io.converge;
 
 import java.time.Duration;
+import java.util.function.Supplier;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -21,6 +22,7 @@ public abstract class IntegrationTestSupport {
             .withNetwork(NETWORK).withNetworkAliases("redis")
             .withExposedPorts(6379)
             .withStartupTimeout(Duration.ofMinutes(2));
+    private static volatile Supplier<String> databaseUrl = POSTGRES::getJdbcUrl;
 
     static {
         POSTGRES.start();
@@ -30,11 +32,24 @@ public abstract class IntegrationTestSupport {
 
     @DynamicPropertySource
     static void infrastructureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.url", () -> databaseUrl.get());
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.kafka.bootstrap-servers", REDPANDA::getBootstrapServers);
         registry.add("spring.data.redis.host", REDIS::getHost);
         registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
+        // Tests invoke workers explicitly; cached Spring contexts must not wake and mutate the shared database.
+        registry.add("sync.worker-initial-delay", () -> "1h");
+        registry.add("sync.relay-initial-delay", () -> "1h");
+        registry.add("reconciliation.initial-delay", () -> "1h");
+        registry.add("ledger.shadow-verification-initial-delay", () -> "1h");
+    }
+
+    protected static void useDatabaseUrl(Supplier<String> url) {
+        databaseUrl = url;
+    }
+
+    protected static void resetDatabaseUrl() {
+        databaseUrl = POSTGRES::getJdbcUrl;
     }
 }

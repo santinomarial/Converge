@@ -20,4 +20,3 @@ class SyncConfiguration {
         return CircuitBreakerRegistry.of(config);
     }
 }
-

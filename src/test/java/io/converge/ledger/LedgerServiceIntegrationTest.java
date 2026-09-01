@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -91,6 +92,31 @@ class LedgerServiceIntegrationTest extends IntegrationTestSupport {
         assertThat(ledger.replay()).isEqualTo(1);
         assertShadowMatches();
         assertThat(ledger.getPosition(1, 10).orElseThrow().qty()).isEqualTo(21);
+    }
+
+    @Test
+    void replayRecoversWhenProjectorCrashesAtARandomSequence() {
+        Random random = new Random(0xC0FFEE);
+        int[] deltas = new int[200];
+        int expected = 0;
+        for (int i = 0; i < deltas.length; i++) {
+            deltas[i] = random.nextInt(-5, 6);
+            expected += deltas[i];
+            append("random-" + i, EventKind.DELTA, deltas[i], null,
+                    Instant.parse("2026-01-01T00:00:00Z").plusSeconds(i).toString());
+        }
+        int crashIndex = random.nextInt(1, deltas.length - 1);
+        int prefixQty = java.util.Arrays.stream(deltas, 0, crashIndex + 1).sum();
+        long crashSeq = ledger.history(1, 10).get(crashIndex).seq();
+        jdbc.sql("""
+                UPDATE inventory_position SET qty = :qty, last_applied_seq = :seq
+                WHERE canonical_sku_id = 1 AND location_id = 10
+                """).param("qty", prefixQty).param("seq", crashSeq).update();
+
+        assertThat(ledger.verifyProjection(1, 10).matches()).isFalse();
+        assertThat(ledger.replay()).isOne();
+        assertThat(ledger.getPosition(1, 10).orElseThrow().qty()).isEqualTo(expected);
+        assertShadowMatches();
     }
 
     @Test

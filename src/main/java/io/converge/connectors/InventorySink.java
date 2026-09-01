@@ -4,6 +4,5 @@ public interface InventorySink {
 
     String system();
 
-    void pushPosition(String externalSkuId, String externalLocationId, int targetQty);
+    void pushPosition(String externalSkuId, String externalLocationId, int targetQty, String idempotencyKey);
 }
-

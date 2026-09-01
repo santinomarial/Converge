@@ -125,16 +125,18 @@ There are no mocked repositories. Integration tests run against PostgreSQL, Redp
 |---|---|
 | Event reordering | jqwik permutations of deltas and snapshot/delta interleavings |
 | Projection loss | Truncate and replay reproduces the exact projection |
-| Incremental projector defect | Every adversarial append is compared with an independent full-history reducer; deliberate corruption is detected and repaired by replay |
+| Incremental projector defect or crash | Every adversarial append is compared with an independent full-history reducer; a crash at a deterministic random sequence and deliberate corruption are detected and repaired by replay |
 | Duplicate storms | 50 concurrent copies produce one ledger row |
-| Database loss mid-write | Toxiproxy cuts PostgreSQL; retry succeeds without a duplicate |
+| Kafka partition during a burst | Redpanda is paused while 100 webhooks accumulate; committed offsets resume with no loss or failed raw records |
+| Database loss after a remote write | Toxiproxy cuts PostgreSQL between Shopify success and local acknowledgement; the expired saga lease reads remote state and completes without a second write |
+| Shopify throttling | WireMock returns `429` for a wall-clock 60 seconds; the breaker leaves work queued and drains it after recovery |
 | Outbox atomicity | Event and outbox commit together against PostgreSQL |
-| Connector behavior | Shopify and Square signatures, errors, and payloads exercised through WireMock |
+| Connector behavior | Shopify and Square signatures, errors, stable idempotency keys, and payloads exercised through WireMock over bounded HTTP/1.1 clients |
 | Persistent drift | An exception opens only on the second consecutive non-zero observation |
 | Human repair | `FOR UPDATE SKIP LOCKED` claim; resolution appends an adjustment |
 | Architecture erosion | Spring Modulith boundary verification on every test run |
 
-The current automated chaos suite does not yet hold Kafka behind a live Toxiproxy partition for a whole burst or keep a Shopify WireMock scenario at `429` for a wall-clock 60 seconds. Consumer recovery and breaker/queue behavior are covered separately; combining those into longer nightly scenarios is the next test investment.
+The chaos scenarios are part of the normal Gradle test task, including the intentional 60-second throttling window. They exercise the same workers and database state machine used in production rather than a parallel test-only implementation.
 
 ## Observability
 

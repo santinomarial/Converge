@@ -47,6 +47,7 @@ sync:
   worker-delay: ${SYNC_WORKER_DELAY:500ms}
   worker-initial-delay: ${SYNC_WORKER_INITIAL_DELAY:60s}
   max-attempts: ${SYNC_MAX_ATTEMPTS:5}
+  running-lease: ${SYNC_RUNNING_LEASE:30s}
   rate-limit:
     capacity: ${SYNC_RATE_CAPACITY:20}
     refill-per-second: ${SYNC_RATE_REFILL_PER_SECOND:10}

@@ -1,9 +1,11 @@
 package io.converge.connectors.square;
 
+import java.net.http.HttpClient;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -18,9 +20,20 @@ public class SquareAdapter implements InventorySource, InventorySink {
 
     public SquareAdapter(RestClient.Builder builder, SquareProperties properties) {
         this.client = builder.baseUrl(properties.getBaseUrl())
+                .requestFactory(requestFactory())
                 .defaultHeader("Authorization", "Bearer " + properties.getAccessToken())
                 .defaultHeader("Square-Version", "2026-08-20")
                 .build();
+    }
+
+    private static JdkClientHttpRequestFactory requestFactory() {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(java.time.Duration.ofSeconds(5))
+                .version(HttpClient.Version.HTTP_1_1)
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(java.time.Duration.ofSeconds(20));
+        return factory;
     }
 
     @Override
@@ -40,9 +53,9 @@ public class SquareAdapter implements InventorySource, InventorySink {
     }
 
     @Override
-    public void pushPosition(String externalSkuId, String externalLocationId, int targetQty) {
+    public void pushPosition(String externalSkuId, String externalLocationId, int targetQty, String idempotencyKey) {
         client.post().uri("/v2/inventory/changes/batch-create")
-                .body(Map.of("idempotency_key", java.util.UUID.randomUUID().toString(),
+                .body(Map.of("idempotency_key", idempotencyKey,
                         "changes", List.of(Map.of("type", "PHYSICAL_COUNT", "physical_count", Map.of(
                                 "catalog_object_id", externalSkuId,
                                 "location_id", externalLocationId,
@@ -54,4 +67,3 @@ public class SquareAdapter implements InventorySource, InventorySink {
     record BatchResponse(List<SquareCount> counts) { }
     record SquareCount(String catalogObjectId, String locationId, String quantity) { }
 }
-
