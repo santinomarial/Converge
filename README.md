@@ -146,13 +146,16 @@ The screenshot above is from the provisioned Grafana 12 dashboard against a Prom
 
 Useful endpoints:
 
+- `POST /webhooks/shopify` and `POST /webhooks/square` — HMAC-verified ingestion
+- `POST /api/identity/skus`, `/locations`, `/sku-mappings`, and `/location-mappings` — register canonical SKUs/locations and map them to external systems
+- `GET /api/positions` (optionally filtered by `sku`/`location`), `GET /api/positions/{sku}/{location}`, and `GET /api/positions/{sku}/{location}/history`
+- `POST /api/sync/{sku}/{location}` — force a manual re-push of the current position to every mapped external system
+- `GET /api/drift?system=shopify&window=PT24H`
+- `GET /api/exceptions?state=OPEN&severity=CRITICAL`, `POST /api/exceptions/{id}/claim`, and `POST /api/exceptions/{id}/resolve`
+- `GET /api/connectors/health` — per-connector status and circuit breaker state
+- `POST /api/admin/replay` — truncate and rebuild every position from full event history
 - `GET /actuator/health/liveness` and `/actuator/health/readiness`
 - `GET /actuator/prometheus`
-- `GET /api/positions` and `/api/positions/{sku}/{location}/history`
-- `GET /api/drift?system=shopify&window=PT24H`
-- `GET /api/exceptions/next`, `POST /api/exceptions/{id}/claim`, and `POST /api/exceptions/{id}/resolve`
-- `POST /api/admin/replay`
-- `POST /webhooks/shopify` and `POST /webhooks/square`
 
 ## Load test
 
