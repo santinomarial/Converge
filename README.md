@@ -85,11 +85,11 @@ The important tables are created by seven versioned [Flyway migrations](src/main
 
 The inventory log needs append-only writes, JSON payloads, global sequencing, uniqueness, row/advisory locks, and atomic projection/outbox updates. PostgreSQL already provides all of those and keeps the correctness boundary in one transaction. A dedicated event-store product would add another operational system and a dual-write problem without buying a capability this workload needs. Redis only short-circuits known duplicates and manages rate-limit tokens; losing it cannot violate idempotency.
 
-The tradeoff is write amplification and eventually the size of a hot relational table. At larger scale I would partition `inventory_event` by time, retain a compact snapshot index, and move cold partitions to cheaper storage while preserving replay semantics.
+The tradeoff is write amplification and hot-table growth. Converge accepts that cost to keep append, projection, replay, and outbox publication inside one durable transaction. Incremental checkpoints keep ordinary writes independent of aggregate history length, while replay and shadow verification preserve the audit guarantee.
 
 ### 2. A modular monolith instead of microservices
 
-Inventory ingestion, ledger projection, outbox creation, and exception opening share invariants that benefit from a local transaction and direct types. Splitting them into services would turn those invariants into distributed protocols before team or throughput pressure justified it. Spring Modulith still makes coupling visible and fails the build on illegal module dependencies, so a future extraction starts from real boundaries rather than package folklore.
+Inventory ingestion, ledger projection, outbox creation, and exception opening share invariants that benefit from a local transaction and direct types. Splitting them into services would turn those invariants into distributed protocols before team or throughput pressure justified it. Spring Modulith makes coupling visible and fails the build on illegal module dependencies, leaving explicit, extraction-ready boundaries rather than package folklore.
 
 The tradeoff is one scaling and failure domain. Today that is deliberate: webhook handling uses Java 21 virtual threads and asynchronous normalization, while scheduled workers can be tuned independently inside the same process.
 
@@ -196,7 +196,3 @@ flyctl deploy
 ```
 
 Do not put credentials in `fly.toml` or Git. The application name can be changed there if `converge-inventory-santinomarial` is unavailable.
-
-## What I would do differently next
-
-I would introduce the dual projection paths from the first ledger milestone. The first implementation used the full-history reducer for both normal writes and replay because it made the invariant obvious, but the load test showed why that should remain an oracle rather than the hot path. That correction is now implemented: production writes are incremental and checkpointed, while replay and continuous shadow verification independently prove the same result. Starting with both would have avoided a later hot-path rewrite without sacrificing the simple correctness model.
