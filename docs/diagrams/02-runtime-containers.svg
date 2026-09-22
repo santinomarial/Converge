@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title description">
+<title id="title">Runtime and containers</title>
+<desc id="description">The Spring Boot application serves the React console and API and runs asynchronous workers. PostgreSQL stores facts and work, Kafka transports messages, Redis supports rate limits, and telemetry flows to observability services.</desc>
+<defs><marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11" fill="none" stroke="#1746A2" stroke-width="2"/></marker><marker id="arrow-muted" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11" fill="none" stroke="#5C6B80" stroke-width="2"/></marker></defs>
+<rect x="0" y="0" width="1440" height="900" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1"/>
+<rect x="32" y="32" width="1376" height="836" rx="16" fill="#FFFFFF" stroke="#CBD5E4" stroke-width="2"/>
+<rect x="52" y="52" width="82" height="92" rx="10" fill="#152B52" stroke="none" stroke-width="1"/>
+<text x="93" y="108" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="800" fill="#FFFFFF">02</text>
+<text x="158" y="91" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#152B52">Runtime and containers</text>
+<text x="158" y="126" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="400" fill="#5C6B80">One deployable modular monolith with durable infrastructure</text>
+<line x1="52" y1="162" x2="1388" y2="162" stroke="#CBD5E4" stroke-width="2"/>
+<rect x="66" y="186" width="250" height="40" rx="6" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="82" y="213" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF">EDGE</text>
+<rect x="354" y="186" width="670" height="40" rx="6" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="370" y="213" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF">CONVERGE · ONE PROCESS</text>
+<rect x="1062" y="186" width="310" height="40" rx="6" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="1078" y="213" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF">STATE &amp; TRANSPORT</text>
+<line x1="316" y1="307" x2="344" y2="307" stroke="#1746A2" stroke-width="3"/>
+<polygon points="344.0,307.0 331.0,301.0 331.0,313.0" fill="#1746A2"/>
+<line x1="316" y1="460" x2="344" y2="460" stroke="#1746A2" stroke-width="3"/>
+<polygon points="344.0,460.0 331.0,454.0 331.0,466.0" fill="#1746A2"/>
+<line x1="1024" y1="300" x2="1052" y2="300" stroke="#1746A2" stroke-width="3"/>
+<polygon points="1052.0,300.0 1039.0,294.0 1039.0,306.0" fill="#1746A2"/>
+<line x1="1024" y1="439" x2="1052" y2="439" stroke="#1746A2" stroke-width="3"/>
+<polygon points="1052.0,439.0 1039.0,433.0 1039.0,445.0" fill="#1746A2"/>
+<line x1="1024" y1="575" x2="1052" y2="575" stroke="#1746A2" stroke-width="3"/>
+<polygon points="1052.0,575.0 1039.0,569.0 1039.0,581.0" fill="#1746A2"/>
+<rect x="66" y="245" width="250" height="130" rx="11" fill="#F8FAFD" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="66" y="245" width="8" height="130" rx="4" fill="#5C6B80" stroke="none" stroke-width="1"/>
+<text x="90" y="279" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Commerce APIs</text>
+<text x="90" y="309" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Shopify + Square</text>
+<text x="90" y="331" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">webhooks and sync</text>
+<rect x="66" y="411" width="250" height="112" rx="11" fill="#F8FAFD" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="66" y="411" width="8" height="112" rx="4" fill="#5C6B80" stroke="none" stroke-width="1"/>
+<text x="90" y="445" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Warehouse feed</text>
+<text x="90" y="475" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">CSV counts</text>
+<rect x="354" y="245" width="670" height="118" rx="11" fill="#F1F5FD" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="354" y="245" width="8" height="118" rx="4" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="378" y="279" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">HTTP edge + React console</text>
+<text x="378" y="309" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Webhook verification, operator API, live read model</text>
+<rect x="354" y="382" width="670" height="118" rx="11" fill="#F1F5FD" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="354" y="382" width="8" height="118" rx="4" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="378" y="416" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Domain modules</text>
+<text x="378" y="446" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Identity · ledger · reconciliation · exceptions</text>
+<rect x="354" y="519" width="670" height="118" rx="11" fill="#F1F5FD" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="354" y="519" width="8" height="118" rx="4" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="378" y="553" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Background workers</text>
+<text x="378" y="583" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Kafka consumers · shadow verifier · outbox relay · sync saga</text>
+<rect x="1062" y="245" width="310" height="110" rx="11" fill="#EEF8F6" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="1062" y="245" width="8" height="110" rx="4" fill="#178277" stroke="none" stroke-width="1"/>
+<text x="1086" y="279" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">PostgreSQL 16</text>
+<text x="1086" y="309" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Log, projection, outbox</text>
+<text x="1086" y="331" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">attempts, exceptions</text>
+<rect x="1062" y="382" width="310" height="110" rx="11" fill="#F6F1FB" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="1062" y="382" width="8" height="110" rx="4" fill="#6946A0" stroke="none" stroke-width="1"/>
+<text x="1086" y="416" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Kafka / Redpanda</text>
+<text x="1086" y="446" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Raw and position-change</text>
+<text x="1086" y="468" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">topics</text>
+<rect x="1062" y="519" width="310" height="110" rx="11" fill="#EEF8F6" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="1062" y="519" width="8" height="110" rx="4" fill="#178277" stroke="none" stroke-width="1"/>
+<text x="1086" y="553" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Redis</text>
+<text x="1086" y="583" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Deduplication hint</text>
+<text x="1086" y="605" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">and token buckets</text>
+<rect x="354" y="685" width="1018" height="40" rx="6" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="370" y="712" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF">OBSERVABILITY · PROMETHEUS METRICS · OTLP TRACES · GRAFANA DASHBOARD</text>
+<path d="M 690 647 L 690 675" fill="none" stroke="#5C6B80" stroke-width="3" stroke-linejoin="round" stroke-dasharray="8 7"/>
+<polygon points="690.0,675.0 696.0,662.0 684.0,662.0" fill="#5C6B80"/>
+<line x1="52" y1="788" x2="1388" y2="788" stroke="#CBD5E4" stroke-width="2"/>
+<text x="68" y="819" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="800" fill="#152B52">KEY</text>
+<rect x="128" y="802" width="18" height="18" rx="3" fill="#5C6B80" stroke="none" stroke-width="1"/>
+<text x="155" y="817" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="400" fill="#1D2D47">External system</text>
+<rect x="306" y="802" width="18" height="18" rx="3" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="333" y="817" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="400" fill="#1D2D47">Application / core</text>
+<rect x="508" y="802" width="18" height="18" rx="3" fill="#178277" stroke="none" stroke-width="1"/>
+<text x="535" y="817" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="400" fill="#1D2D47">Durable data</text>
+<rect x="662" y="802" width="18" height="18" rx="3" fill="#6946A0" stroke="none" stroke-width="1"/>
+<text x="689" y="817" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="400" fill="#1D2D47">Event transport</text>
+<text x="68" y="855" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="400" fill="#5C6B80">Module boundaries are build-verified; the workers share the same deployable and transaction boundary.</text>
+</svg>

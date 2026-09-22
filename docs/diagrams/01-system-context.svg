@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title description">
+<title id="title">System context</title>
+<desc id="description">Shopify, Square, and a warehouse feed provide inventory facts to Converge. Operators use the console. Converge writes desired positions back to mapped commerce systems.</desc>
+<defs><marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11" fill="none" stroke="#1746A2" stroke-width="2"/></marker><marker id="arrow-muted" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11" fill="none" stroke="#5C6B80" stroke-width="2"/></marker></defs>
+<rect x="0" y="0" width="1440" height="900" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1"/>
+<rect x="32" y="32" width="1376" height="836" rx="16" fill="#FFFFFF" stroke="#CBD5E4" stroke-width="2"/>
+<rect x="52" y="52" width="82" height="92" rx="10" fill="#152B52" stroke="none" stroke-width="1"/>
+<text x="93" y="108" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="800" fill="#FFFFFF">01</text>
+<text x="158" y="91" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" fill="#152B52">System context</text>
+<text x="158" y="126" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="400" fill="#5C6B80">Who sends facts, who acts on disagreement, and where repairs go</text>
+<line x1="52" y1="162" x2="1388" y2="162" stroke="#CBD5E4" stroke-width="2"/>
+<rect x="68" y="190" width="350" height="40" rx="6" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="84" y="217" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF">EXTERNAL INVENTORY SOURCES</text>
+<rect x="510" y="190" width="420" height="40" rx="6" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="526" y="217" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF">CONVERGE BOUNDARY</text>
+<rect x="1022" y="190" width="350" height="40" rx="6" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="1038" y="217" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF">OPERATIONS</text>
+<line x1="418" y1="299" x2="500" y2="299" stroke="#1746A2" stroke-width="3"/>
+<polygon points="500.0,299.0 487.0,293.0 487.0,305.0" fill="#1746A2"/>
+<line x1="500" y1="331" x2="418" y2="331" stroke="#1746A2" stroke-width="3"/>
+<polygon points="418.0,331.0 431.0,337.0 431.0,325.0" fill="#1746A2"/>
+<line x1="418" y1="450" x2="500" y2="450" stroke="#1746A2" stroke-width="3"/>
+<polygon points="500.0,450.0 487.0,444.0 487.0,456.0" fill="#1746A2"/>
+<line x1="500" y1="482" x2="418" y2="482" stroke="#1746A2" stroke-width="3"/>
+<polygon points="418.0,482.0 431.0,488.0 431.0,476.0" fill="#1746A2"/>
+<line x1="418" y1="600" x2="500" y2="600" stroke="#1746A2" stroke-width="3"/>
+<polygon points="500.0,600.0 487.0,594.0 487.0,606.0" fill="#1746A2"/>
+<line x1="940" y1="355" x2="1012" y2="355" stroke="#1746A2" stroke-width="3"/>
+<polygon points="1012.0,355.0 999.0,349.0 999.0,361.0" fill="#1746A2"/>
+<line x1="1012" y1="390" x2="940" y2="390" stroke="#1746A2" stroke-width="3"/>
+<polygon points="940.0,390.0 953.0,396.0 953.0,384.0" fill="#1746A2"/>
+<rect x="68" y="248" width="350" height="116" rx="11" fill="#F8FAFD" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="68" y="248" width="8" height="116" rx="4" fill="#5C6B80" stroke="none" stroke-width="1"/>
+<text x="92" y="282" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Shopify</text>
+<text x="92" y="312" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Signed webhooks in</text>
+<text x="92" y="334" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Position updates out</text>
+<rect x="68" y="400" width="350" height="116" rx="11" fill="#F8FAFD" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="68" y="400" width="8" height="116" rx="4" fill="#5C6B80" stroke="none" stroke-width="1"/>
+<text x="92" y="434" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Square</text>
+<text x="92" y="464" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Signed webhooks in</text>
+<text x="92" y="486" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Position updates out</text>
+<rect x="68" y="552" width="350" height="108" rx="11" fill="#F8FAFD" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="68" y="552" width="8" height="108" rx="4" fill="#5C6B80" stroke="none" stroke-width="1"/>
+<text x="92" y="586" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Warehouse CSV</text>
+<text x="92" y="616" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Physical counts and feed rows in</text>
+<rect x="510" y="248" width="420" height="412" rx="11" fill="#F1F5FD" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="510" y="248" width="8" height="412" rx="4" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="534" y="282" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Inventory control engine</text>
+<text x="534" y="312" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">One canonical SKU/location position</text>
+<text x="534" y="334" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Append-only event history</text>
+<text x="534" y="356" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Persistent drift and exception queue</text>
+<text x="534" y="378" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Auditable outbound repair</text>
+<rect x="865" y="262" width="48" height="25" rx="12" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="889" y="280" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">ONE</text>
+<rect x="1022" y="292" width="350" height="140" rx="11" fill="#FFF7E9" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="1022" y="292" width="8" height="140" rx="4" fill="#A66514" stroke="none" stroke-width="1"/>
+<text x="1046" y="326" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Operations console</text>
+<text x="1046" y="356" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Inspect positions and history</text>
+<text x="1046" y="378" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Claim and resolve exceptions</text>
+<rect x="1022" y="504" width="350" height="108" rx="11" fill="#FFF7E9" stroke="#CBD5E4" stroke-width="1.6"/>
+<rect x="1022" y="504" width="8" height="108" rx="4" fill="#A66514" stroke="none" stroke-width="1"/>
+<text x="1046" y="538" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700" fill="#152B52">Operator</text>
+<text x="1046" y="568" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="400" fill="#1D2D47">Decides when to adjust or dismiss</text>
+<line x1="1197" y1="494" x2="1197" y2="442" stroke="#1746A2" stroke-width="3"/>
+<polygon points="1197.0,442.0 1191.0,455.0 1203.0,455.0" fill="#1746A2"/>
+<rect x="426" y="259" width="61" height="27" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1"/>
+<text x="434" y="277" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#1746A2">facts</text>
+<rect x="423" y="345" width="52" height="27" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1"/>
+<text x="431" y="363" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#1746A2">sync</text>
+<line x1="52" y1="788" x2="1388" y2="788" stroke="#CBD5E4" stroke-width="2"/>
+<text x="68" y="819" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="800" fill="#152B52">KEY</text>
+<rect x="128" y="802" width="18" height="18" rx="3" fill="#5C6B80" stroke="none" stroke-width="1"/>
+<text x="155" y="817" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="400" fill="#1D2D47">External system</text>
+<rect x="306" y="802" width="18" height="18" rx="3" fill="#1746A2" stroke="none" stroke-width="1"/>
+<text x="333" y="817" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="400" fill="#1D2D47">Application / core</text>
+<rect x="508" y="802" width="18" height="18" rx="3" fill="#A66514" stroke="none" stroke-width="1"/>
+<text x="535" y="817" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="400" fill="#1D2D47">Control / review</text>
+<text x="68" y="855" text-anchor="start" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="400" fill="#5C6B80">The warehouse is an inbound feed; Shopify and Square are both sources and sync targets.</text>
+</svg>
