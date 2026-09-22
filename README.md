@@ -19,6 +19,8 @@ docker compose up -d --build
 
 Open the operations console at [http://localhost:8080](http://localhost:8080), Grafana at [http://localhost:3000](http://localhost:3000), Prometheus at [http://localhost:9090](http://localhost:9090), and health probes at [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health). Grafana is anonymously accessible in the local stack and provisions `Converge inventory drift` automatically.
 
+The console reads live positions, observed Shopify/Square quantities, active exceptions, drift samples, event history, and pending outbound syncs from the API. A new database therefore opens to honest empty states, not example inventory. Export CSV exports the current filtered position set; resolution and force-sync controls report API failures without pretending they succeeded. The local profile leaves the API open for development. Production requires the console credentials described below.
+
 If a default port is already occupied, every published port is overridable—for example:
 
 ```bash

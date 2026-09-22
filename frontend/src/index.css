@@ -30,6 +30,15 @@ nav { display: grid; gap: 4px; }
 .nav-count { float: right; font-family: "IBM Plex Mono", monospace; color: #C2410C; }
 .sidebar-status { margin-top: auto; padding: 14px 10px 0; border-top: 1px solid #E3DEDF; color: #6B6265; font-size: 12px; display: flex; gap: 8px; align-items: center; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #1E6B4F; display: inline-block; }
+.status-dot.status-warn { background: #B8760B; }
+.error-banner, .action-error { color: #8C1626; background: #FBF0F1; padding: 10px 14px; font-size: 13px; }
+.error-banner button { border: 0; color: #8C1626; background: transparent; text-decoration: underline; cursor: pointer; }
+.sign-in { width: min(420px, 100%); margin: 8vh auto; padding: 32px; border: 1px solid #E3DEDF; }
+.sign-in .brand { margin: 0 0 32px; }
+.sign-in p { color: #6B6265; font-size: 13px; }
+.sign-in form { display: grid; gap: 18px; margin-top: 24px; }
+.sign-in form input { width: 100%; }
+.sign-in form button { justify-self: start; }
 main { padding: 34px 44px 64px; max-width: 1480px; width: 100%; }
 .page-header { display: flex; align-items: end; justify-content: space-between; border-bottom: 1px solid #1C1719; padding-bottom: 18px; }
 .context-label { color: #6B6265; margin: 0 0 4px; font-size: 13px; }
