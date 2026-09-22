@@ -14,6 +14,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Validate documentation and diagrams
+        run: |
+          python3 docs/diagrams/render.py
+          python3 docs/check_docs.py
+          git diff --exit-code -- docs/diagrams
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -33,4 +38,3 @@ jobs:
         run: npm ci && npm run build
       - name: Build production image
         run: docker build -t converge:${{ github.sha }} .
-

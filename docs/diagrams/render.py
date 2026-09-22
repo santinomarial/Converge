@@ -138,7 +138,7 @@ def system_context():
     d.line(1197, 494, 1197, 442, arrow=True)
     d.label(434, 277, "facts")
     d.label(431, 363, "sync")
-    d.footer("The warehouse is an inbound feed; Shopify and Square are both sources and sync targets.",
+    d.footer("Warehouse CSV ingestion is an internal service; no upload endpoint is exposed. Commerce systems sync both ways.",
              ("external", "core", "control"))
     d.save("01-system-context.svg")
 

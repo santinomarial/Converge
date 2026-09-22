@@ -38,3 +38,5 @@ The presentation is an original, editable SVG treatment informed by the [TOGAF d
 ![Deployment target: commerce systems and operators connect to an always-on Fly machine backed by managed PostgreSQL, Kafka, and Redis.](06-production-topology.svg)
 
 The SVGs are committed for direct viewing on GitHub. Their source of truth is [`render.py`](render.py); run `python3 docs/diagrams/render.py` after changing the diagram content. Each SVG includes a title and description for assistive technology.
+
+The warehouse CSV parser and ingestor exist as an internal service, not as a public upload endpoint or scheduled feed connector. The gallery distinguishes the intended production topology from currently provisioned infrastructure.
