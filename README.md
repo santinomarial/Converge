@@ -182,17 +182,21 @@ Normal writes no longer reduce the full history. A delta performs an atomic chec
 
 The production image is a multi-stage build: Node compiles the React console, Gradle produces the Spring Boot jar, and a Java 21 JRE runs both as one artifact. GitHub Actions runs the entire Testcontainers suite, builds the console, and builds that Docker image.
 
-`fly.toml` targets Fly.io in `iad`, enables readiness checks, and starts/stops a 1 GB shared machine on demand. Converge still requires durable PostgreSQL, Redis, and Kafka-compatible endpoints. Set them before the first deploy:
+`fly.toml` targets Fly.io in `iad`, enables readiness checks, and keeps one 1 GB shared machine running continuously. This is required for the embedded Kafka consumers, projector, reconciliation loop, and outbound workers; an HTTP-idle machine would stop processing events. The `prod` profile refuses to start with missing credentials, development defaults, local infrastructure addresses, or non-HTTPS connector URLs. Converge requires durable PostgreSQL, Redis, and Kafka-compatible endpoints. Create the Fly app and provision these services before the first deploy, then set secrets:
 
 ```bash
 flyctl secrets set \
   DATABASE_URL='jdbc:postgresql://HOST:5432/converge?sslmode=require' \
   DATABASE_USERNAME='...' DATABASE_PASSWORD='...' \
   KAFKA_BOOTSTRAP_SERVERS='...' REDIS_HOST='...' REDIS_PORT='6379' \
+  SHOPIFY_BASE_URL='https://YOUR-SHOP.myshopify.com' \
   SHOPIFY_ACCESS_TOKEN='...' SHOPIFY_WEBHOOK_SECRET='...' \
-  SQUARE_ACCESS_TOKEN='...' SQUARE_WEBHOOK_SIGNATURE_KEY='...'
+  SQUARE_BASE_URL='https://connect.squareup.com' \
+  SQUARE_ACCESS_TOKEN='...' SQUARE_WEBHOOK_SIGNATURE_KEY='...' \
+  SQUARE_NOTIFICATION_URL='https://YOUR-APP.fly.dev/webhooks/square' \
+  CONSOLE_USERNAME='...' CONSOLE_PASSWORD='A-UNIQUE-RANDOM-20+-CHARACTER-SECRET'
 
 flyctl deploy
 ```
 
-Do not put credentials in `fly.toml` or Git. The application name can be changed there if `converge-inventory-santinomarial` is unavailable.
+The production API and Prometheus endpoint use HTTP Basic authentication; webhook POSTs and health checks remain public. Use the console credentials for API access, and configure the same credentials in any Prometheus scraper. For a TLS/SASL Kafka provider, also set `KAFKA_SECURITY_PROTOCOL=SASL_SSL`, `KAFKA_SASL_MECHANISM`, and `KAFKA_SASL_JAAS_CONFIG`. Set `REDIS_SSL_ENABLED=true` for TLS Redis. Verify the provider's required URL/port and network rules before deploying. Do not put credentials in `fly.toml` or Git. The application name can be changed there if `converge-inventory-santinomarial` is unavailable.
