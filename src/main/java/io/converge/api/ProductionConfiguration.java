@@ -17,7 +17,7 @@ public class ProductionConfiguration {
                 "SQUARE_WEBHOOK_SIGNATURE_KEY", "SQUARE_NOTIFICATION_URL", "CONSOLE_USERNAME",
                 "CONSOLE_PASSWORD")) {
             String value = environment.getProperty(key);
-            if (value == null || value.isBlank() || value.startsWith("development-")) {
+            if (value == null || value.isBlank() || "...".equals(value) || value.startsWith("development-")) {
                 throw new IllegalStateException("Production configuration requires " + key);
             }
         }
@@ -31,6 +31,18 @@ public class ProductionConfiguration {
             String value = environment.getRequiredProperty(key).toLowerCase();
             if (value.contains("localhost") || value.contains("127.0.0.1")) {
                 throw new IllegalStateException(key + " must not point to localhost in production");
+            }
+        }
+        if (!environment.getRequiredProperty("DATABASE_URL").startsWith("jdbc:postgresql:")) {
+            throw new IllegalStateException("DATABASE_URL must use PostgreSQL");
+        }
+        String protocol = environment.getProperty("KAFKA_SECURITY_PROTOCOL", "PLAINTEXT");
+        if (protocol.startsWith("SASL_")) {
+            for (String key : List.of("KAFKA_SASL_MECHANISM", "KAFKA_SASL_JAAS_CONFIG")) {
+                String value = environment.getProperty(key);
+                if (value == null || value.isBlank()) {
+                    throw new IllegalStateException(protocol + " requires " + key);
+                }
             }
         }
         if (environment.getRequiredProperty("CONSOLE_PASSWORD").length() < 20) {

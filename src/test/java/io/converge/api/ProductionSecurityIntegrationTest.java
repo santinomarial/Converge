@@ -41,6 +41,10 @@ class ProductionSecurityIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isUnauthorized());
         mvc.perform(get("/api/operations/summary").header("Authorization", basic("operator", "a-unique-twenty-character-password")))
                 .andExpect(status().isOk());
+        mvc.perform(post("/api/admin/replay").header("Authorization", basic("operator", "a-unique-twenty-character-password")))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/admin/replay").header("Authorization", basic("operator", "a-unique-twenty-character-password"))
+                .header("X-Converge-Request", "console")).andExpect(status().isOk());
         mvc.perform(get("/actuator/health/readiness")).andExpect(status().isOk());
     }
 

@@ -12,7 +12,8 @@ type Summary = { eventsToday: number; locations: number };
 
 class HttpError extends Error { constructor(public status: number, message: string) { super(message); } }
 async function requestJson<T>(url: string, auth: string | null, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, { ...init, headers: { ...(init?.headers ?? {}), ...(auth ? { Authorization: `Basic ${auth}` } : {}) } });
+  const method = init?.method?.toUpperCase() ?? "GET";
+  const response = await fetch(url, { ...init, headers: { ...(init?.headers ?? {}), ...(auth ? { Authorization: `Basic ${auth}` } : {}), ...(method !== "GET" && url.startsWith("/api/") ? { "X-Converge-Request": "console" } : {}) } });
   if (!response.ok) throw new HttpError(response.status, `Request failed (${response.status})`);
   return response.json() as Promise<T>;
 }

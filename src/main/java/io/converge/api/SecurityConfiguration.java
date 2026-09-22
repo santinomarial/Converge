@@ -7,23 +7,34 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 
 @Configuration
 public class SecurityConfiguration {
     @Bean
     @Profile("prod")
     SecurityFilterChain productionSecurity(HttpSecurity http) throws Exception {
+        AuthorizationManager<RequestAuthorizationContext> consoleWrite = (authentication, context) ->
+                new AuthorizationDecision(authentication.get().getAuthorities().stream()
+                        .anyMatch(authority -> "ROLE_OPERATOR".equals(authority.getAuthority()))
+                        && "console".equals(context.getRequest().getHeader("X-Converge-Request")));
         return http
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/webhooks/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/webhooks/**").permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/health").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/**").access(consoleWrite)
+                        .requestMatchers(HttpMethod.PUT, "/api/**").access(consoleWrite)
+                        .requestMatchers(HttpMethod.PATCH, "/api/**").access(consoleWrite)
+                        .requestMatchers(HttpMethod.DELETE, "/api/**").access(consoleWrite)
                         .requestMatchers("/api/**", "/actuator/prometheus").authenticated()
                         .anyRequest().permitAll())
                 .httpBasic(Customizer.withDefaults())

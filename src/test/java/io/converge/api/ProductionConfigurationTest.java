@@ -42,4 +42,11 @@ class ProductionConfigurationTest {
         assertThatThrownBy(() -> new ProductionConfiguration(validEnvironment().withProperty("SQUARE_NOTIFICATION_URL", "http://app.fly.dev/webhooks/square")))
                 .hasMessageContaining("SQUARE_NOTIFICATION_URL");
     }
+
+    @Test
+    void requiresSaslCredentialsWhenKafkaUsesSasl() {
+        assertThatThrownBy(() -> new ProductionConfiguration(validEnvironment()
+                .withProperty("KAFKA_SECURITY_PROTOCOL", "SASL_SSL")))
+                .hasMessageContaining("KAFKA_SASL_MECHANISM");
+    }
 }
